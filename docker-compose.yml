@@ -1,0 +1,26 @@
+version: '3.8'
+services:
+  api:
+    build: ./backend
+    ports:
+      - "3000:3000"
+    environment:
+      - DATABASE_URL=postgres://user:pass@db:5432/catan_db
+      - REDIS_URL=redis://cache:6379
+    depends_on:
+      - db
+      - cache
+
+  db:
+    image: postgres:15
+    environment:
+      - POSTGRES_USER=user
+      - POSTGRES_PASSWORD=pass
+      - POSTGRES_DB=catan_db
+    ports:
+      - "5432:5432"
+
+  cache:
+    image: redis:alpine
+    ports:
+      - "6379:6379"
