@@ -1,26 +1,53 @@
-version: '3.8'
 services:
   api:
     build: ./backend
     ports:
       - "3000:3000"
+    volumes:
+      - ./backend:/app          # Hot-reload: local edits reflect in container
+      - /app/node_modules       # Anonymous volume: protects container dependencies
     environment:
-      - DATABASE_URL=postgres://user:pass@db:5432/catan_db
+      - DATABASE_URL=postgres://user:password@db:5432/catan_db
       - REDIS_URL=redis://cache:6379
     depends_on:
-      - db
-      - cache
+      db:
+        condition: service_healthy # Only starts API when DB is actually ready
+      cache:
+        condition: service_started
 
   db:
-    image: postgres:15
+    image: postgres:15-alpine
     environment:
       - POSTGRES_USER=user
-      - POSTGRES_PASSWORD=pass
+      - POSTGRES_PASSWORD=password
       - POSTGRES_DB=catan_db
     ports:
       - "5432:5432"
+    volumes:
+      - catan_data:/var/lib/postgresql/data
+      - ./backend/db/db-init:/docker-entrypoint-initdb.d
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U user -d catan_db"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
 
   cache:
-    image: redis:alpine
+    image: redis:7-alpine
     ports:
       - "6379:6379"
+
+  pgadmin:
+    image: dpage/pgadmin4
+    container_name: catan_pgadmin
+    restart: always
+    environment:
+      PGADMIN_DEFAULT_EMAIL: admin@admin.com
+      PGADMIN_DEFAULT_PASSWORD: admin
+    ports:
+      - "8080:80"
+    depends_on:
+      - db
+
+volumes:
+  catan_data:
