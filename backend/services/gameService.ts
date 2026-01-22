@@ -7,17 +7,17 @@ export const GameService = {
     try {
       await client.query('BEGIN');
       
-      const gameRes = await client.query(
+    const gameRes = await client.query(
         `INSERT INTO games (user_id, lobby_id, game_timestamp, dice_stats, res_card_stats, dev_card_stats)
          VALUES ($1, $2, $3, $4, $5, $6) 
-         ON CONFLICT (lobby_id) 
+         ON CONFLICT (lobby_id, game_timestamp) 
          DO UPDATE SET 
             dice_stats = EXCLUDED.dice_stats,
             res_card_stats = EXCLUDED.res_card_stats,
             dev_card_stats = EXCLUDED.dev_card_stats
          RETURNING id`,
         [userId, data.lobbyId, data.timestamp, data.dice_stats, data.res_card_stats, data.dev_card_stats]
-      );
+    );
 
       const gameId = gameRes.rows[0].id;
 
@@ -31,10 +31,11 @@ export const GameService = {
 
         // UPDATED: Added is_me ($6)
         await client.query(
-          `INSERT INTO player_stats (game_id, player_name, vp, is_bot, is_winner, is_me, activity_stats, resource_stats)
-           VALUES ($1, $2, $3, $4, $5, $6, $7, $8)`,
+          `INSERT INTO player_stats (game_id,uploader_id, player_name, vp, is_bot, is_winner, is_me, activity_stats, resource_stats)
+           VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9)`,
           [
             gameId, 
+            userId,
             player.name, 
             player.vp, 
             player.isBot, 

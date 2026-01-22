@@ -12,24 +12,27 @@ CREATE TABLE IF NOT EXISTS users (
 CREATE TABLE IF NOT EXISTS games (
     id SERIAL PRIMARY KEY,
     user_id VARCHAR(255) REFERENCES users(discord_id), 
-    lobby_id VARCHAR(50) UNIQUE NOT NULL,
+    lobby_id VARCHAR(50) NOT NULL,
     game_timestamp TIMESTAMP NOT NULL,
     dice_stats JSONB NOT NULL,
     res_card_stats JSONB,
     dev_card_stats JSONB,
-    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    UNIQUE (lobby_id, game_timestamp)
 );
 
 CREATE TABLE IF NOT EXISTS player_stats (
     id SERIAL PRIMARY KEY,
     game_id INTEGER REFERENCES games(id) ON DELETE CASCADE,
+    uploader_id VARCHAR(255) REFERENCES users(discord_id),
     player_name VARCHAR(255) NOT NULL,
     vp INTEGER NOT NULL,
     is_bot BOOLEAN NOT NULL,
     is_winner BOOLEAN NOT NULL,
     is_me BOOLEAN DEFAULT false, -- The key to multi-user stats
     activity_stats JSONB,
-    resource_stats JSONB
+    resource_stats JSONB,
+    UNIQUE (game_id, uploader_id, player_name)
 );
 
 DROP VIEW IF EXISTS leaderboard_view;
@@ -39,8 +42,8 @@ CREATE VIEW user_stats_view AS
 SELECT 
     u.discord_id,
     u.username,
-    COUNT(DISTINCT g.id) AS total_games,
-    COUNT(DISTINCT CASE WHEN ps.is_winner AND ps.is_me THEN g.id END) AS wins,
+    COUNT(DISTINCT g.id) AS total_games, -- count games where the user is the uploader
+    COUNT(DISTINCT CASE WHEN ps.is_winner AND ps.is_me THEN g.id END) AS wins, --count wins 
     COALESCE(ROUND(AVG(ps.vp) FILTER (WHERE ps.is_me), 1), 0) AS avg_vp,
     CASE 
         WHEN COUNT(DISTINCT g.id) > 0 THEN 
