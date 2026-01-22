@@ -6,10 +6,16 @@
   "host_permissions": [
     "http://localhost:3000/*"
   ],
+  "externally_connectable": {
+    "matches": ["http://localhost:3000/*"]
+  },
   "content_scripts": [
     {
       "matches": ["https://colonist.io/*"],
       "js": ["content.js"]
     }
-  ]
+  ],
+  "background": {
+    "service_worker": "background.js"
+  }
 }
