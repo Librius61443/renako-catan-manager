@@ -4,30 +4,35 @@ services:
     ports:
       - "3000:3000"
     volumes:
-      - ./backend:/app          # Hot-reload: local edits reflect in container
-      - /app/node_modules       # Anonymous volume: protects container dependencies
+      - ./backend:/app          
+      - /app/node_modules       
     environment:
-      - DATABASE_URL=postgres://user:password@db:5432/catan_db
-      - REDIS_URL=redis://cache:6379
+          - DATABASE_URL=postgres://${DB_USER:-user}:${DB_PASSWORD:-password}@db:5432/${DB_NAME:-catan_db}
+          - DISCORD_CLIENT_ID=${DISCORD_CLIENT_ID}
+          - DISCORD_CLIENT_SECRET=${DISCORD_CLIENT_SECRET}
+          - REDIRECT_URI=${REDIRECT_URI}
+          - DISCORD_AUTH_URL=${DISCORD_AUTH_URL}
+          - REDIS_URL=redis://cache:6379
     depends_on:
       db:
-        condition: service_healthy # Only starts API when DB is actually ready
+        condition: service_healthy 
       cache:
         condition: service_started
 
   db:
     image: postgres:15-alpine
     environment:
-      - POSTGRES_USER=user
-      - POSTGRES_PASSWORD=password
-      - POSTGRES_DB=catan_db
+      # Pulling DB credentials from root .env
+      - POSTGRES_USER=${DB_USER:-user}
+      - POSTGRES_PASSWORD=${DB_PASSWORD:-password}
+      - POSTGRES_DB=${DB_NAME:-catan_db}
     ports:
       - "5432:5432"
     volumes:
       - catan_data:/var/lib/postgresql/data
       - ./backend/db/db-init:/docker-entrypoint-initdb.d
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U user -d catan_db"]
+      test: ["CMD-SHELL", "pg_isready -U ${DB_USER:-user} -d ${DB_NAME:-catan_db}"]
       interval: 5s
       timeout: 5s
       retries: 5
@@ -42,12 +47,31 @@ services:
     container_name: catan_pgadmin
     restart: always
     environment:
-      PGADMIN_DEFAULT_EMAIL: admin@admin.com
-      PGADMIN_DEFAULT_PASSWORD: admin
+      - PGADMIN_DEFAULT_EMAIL=${PGADMIN_EMAIL:-admin@admin.com}
+      - PGADMIN_DEFAULT_PASSWORD=${PGADMIN_PASSWORD:-admin}
+      - PGADMIN_CONFIG_SERVER_MODE=False
+      - PGADMIN_CONFIG_MASTER_PASSWORD_REQUIRED=False
+      - PGADMIN_CONFIG_STRICT_SET_OWNERSHIP=False
+    volumes:
+      - ./backend/db/pgadmin_servers.json:/pgadmin4/servers.json
+      - ./backend/db/pgpass:/var/lib/pgadmin/storage/admin_admin.com/pgpass
     ports:
       - "8080:80"
     depends_on:
       - db
+
+  discord-bot:
+    build: ./discord-bot
+    restart: always
+    environment:
+      # Pulling Discord secrets from root .env
+      - DATABASE_URL=postgres://${DB_USER:-user}:${DB_PASSWORD:-password}@db:5432/${DB_NAME:-catan_db}
+      - DISCORD_TOKEN=${DISCORD_TOKEN}
+      - DISCORD_CLIENT_ID=${DISCORD_CLIENT_ID}
+      - GUILD_ID=${GUILD_ID}
+    depends_on:
+      db:
+        condition: service_healthy
 
 volumes:
   catan_data:
