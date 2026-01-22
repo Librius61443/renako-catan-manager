@@ -1,3 +1,4 @@
+/// <reference types="chrome" />
 import { ScrapeCoordinator } from './coordinator';
 import { OverviewScraper, DiceScraper, ResourceScraper, ActivityScraper, ResCardScraper, DevCardScraper } from './scraper';
 import { GameStats, Player } from './types';
@@ -25,16 +26,58 @@ coordinator.addStrategy(new DevCardScraper());
 coordinator.addStrategy(new ActivityScraper());
 coordinator.addStrategy(new ResourceScraper());
 
+/**
+ * LOBBY LOCK: Identifies the local user from the lobby list
+ */
+const lockIdentityInLobby = () => {
+    // Select the player names in the lobby list
+    const nameSpans = document.querySelectorAll('.room_player_username');
+    
+    for (const span of Array.from(nameSpans)) {
+        const text = span.textContent || "";
+        if (text.includes("(You)")) {
+            const myName = text.replace("(You)", "").trim();
+            // Store it so we remember it when the game ends
+            chrome.storage.local.set({ session_me: myName });
+            console.log("[Catan Logger] Identity Locked:", myName);
+            return myName;
+        }
+    }
+    return null;
+};
+
 const processAndSend = async (currentLobby: string) => {
     if (isProcessingGame) return;
     isProcessingGame = true;
+
     try {
-        const stats = await coordinator.executeFullCrawl(); // returns Partial<GameStats>
-        const overview = (stats.overview || []) as Player[];
+        const credentials = await chrome.storage.local.get(['apiKey', 'session_me']) as { 
+                    apiKey?: string; 
+                    session_me?: string; 
+                };        
+        const apiKey = credentials.apiKey || "";
+        const sessionMe = credentials.session_me || "";
+
+        if (!apiKey) {
+            console.error("[Catan Logger] No API Key found! Please link account.");
+            return;
+        }
+
+        const stats = await coordinator.executeFullCrawl();
+        
+        // --- PROFESSIONAL FIX: Apply isMe flag to Overview ---
+        const rawOverview = (stats.overview || []) as Player[];
+        const overviewWithIdentity = rawOverview.map(player => ({
+            ...player,
+            // Clean (You) just in case the end-game screen has it too
+            name: player.name.replace("(You)", "").trim(),
+            // Flag as 'Me' if name matches what we locked in the lobby
+            isMe: player.name.includes("(You)") || player.name.trim() === sessionMe
+        }));
 
         const zipTable = (tableData: any) => {
             if (!tableData || !tableData.headers) return [];
-            return overview.map((player, index) => {
+            return overviewWithIdentity.map((player, index) => {
                 const row = tableData.rows[index] || [];
                 const result: Record<string, any> = { name: player.name };
                 tableData.headers.forEach((header: string, i: number) => {
@@ -45,41 +88,53 @@ const processAndSend = async (currentLobby: string) => {
             });
         };
 
-        const payload: GameStats = {
+        const payload = {
             lobbyId: currentLobby,
             timestamp: new Date().toISOString(),
-            overview: (stats.overview || []) as Player[],
+            overview: overviewWithIdentity,
             dice_stats: stats.dice_stats || {},
-            res_card_stats: stats.res_card_stats || {}, // This should now be { lumber: 5, brick: 8 ... }
+            res_card_stats: stats.res_card_stats || {},
             dev_card_stats: stats.dev_card_stats || {},
             activity_stats: zipTable(stats.activity_stats),
             resource_stats: zipTable(stats.resource_stats)
         };
-        console.log("[Catan Logger] Final Payload:", payload);
-        await fetch('http://localhost:3000/api/ingest', {
+
+        const response = await fetch('http://localhost:3000/api/games/ingest', {
             method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
+            headers: { 
+                'Content-Type': 'application/json',
+                'x-api-key': apiKey 
+            },
             body: JSON.stringify(payload)
         });
+
+        if (!response.ok) throw new Error(`Server responded with ${response.status}`);
+
+        console.log("[Catan Logger] Successfully uploaded game stats!");
         lastLoggedLobby = currentLobby;
+
     } catch (err) {
-        console.error("Scrape failed", err);
+        console.error("[Catan Logger] Scrape or Upload failed:", err);
     } finally {
-        setTimeout(() => {
-                isProcessingGame = false;
-                console.log("[Catan Logger] Lock Released.");
-        }, 2000);
+        setTimeout(() => { isProcessingGame = false; }, 2000);
     }
 };
 
-(window as any).runScraper = (force = false) => {
-    if (force) { lastLoggedLobby = null; isProcessingGame = false; }
-    processAndSend(window.location.href.split('/').pop() || "");
-};
-
+// MUTATION OBSERVER: Watches for Lobby entry OR Game completion
 const observer = new MutationObserver(() => {
+    const lobbyList = document.querySelector('#scene_room_player_list');
     const modal = document.querySelector('div[class*="contentContainer"]');
-    const lobby = window.location.href.split('/').pop() || "";
-    if (modal && !isProcessingGame && lobby !== lastLoggedLobby) processAndSend(lobby);
+    const lobbyId = window.location.href.split('/').pop() || "";
+
+    // 1. If in Lobby, lock the identity
+    if (lobbyList) {
+        lockIdentityInLobby();
+    }
+
+    // 2. If end-game modal appears, trigger upload
+    if (modal && !isProcessingGame && lobbyId !== lastLoggedLobby) {
+        processAndSend(lobbyId);
+    }
 });
+
 observer.observe(document.body, { childList: true, subtree: true });
