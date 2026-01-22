@@ -1,0 +1,14 @@
+{
+    "Servers": {
+        "1": {
+            "Name": "Catan Local DB",
+            "Group": "Servers",
+            "Host": "db",
+            "Port": 5432,
+            "MaintenanceDB": "catan_db",
+            "Username": "user",
+            "SSLMode": "prefer",
+            "PassFile": "/pgadmin4/pgpass"
+        }
+    }
+}
