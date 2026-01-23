@@ -1,4 +1,4 @@
-import { Collection } from 'discord.js';
+import { Collection,REST,Routes } from 'discord.js';
 import fs from 'fs/promises';
 import path from 'path';
 import { fileURLToPath, pathToFileURL } from 'url';
@@ -38,5 +38,21 @@ export class CommandHandler {
             }
         }
         return this.commands;
+    }
+    async register(commands: any[]) {
+        const rest = new REST({ version: '10' }).setToken(process.env.DISCORD_TOKEN!);
+        try {
+            console.log('🔄 Started refreshing application (/) commands.');
+
+            // This pushes your local command definitions to Discord
+            await rest.put(
+                Routes.applicationCommands(process.env.DISCORD_CLIENT_ID!),
+                { body: commands.map(c => c.data.toJSON()) },
+            );
+
+            console.log('✅ Successfully reloaded application (/) commands.');
+        } catch (error) {
+            console.error('❌ Error registering commands:', error);
+        }
     }
 }
