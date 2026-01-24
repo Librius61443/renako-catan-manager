@@ -1,6 +1,6 @@
 import { Hono } from 'hono';
 import { UserService } from '../services/userService.js';
-
+import { SessionService } from '../services/sessionService.js';
 const discordRoutes = new Hono();
 
 discordRoutes.get('/stats/:discordId', async (c) => {
@@ -36,6 +36,27 @@ discordRoutes.get('/search', async (c) => {
     if (!stats) return c.json({ error: 'not_found' }, 404);
     
     return c.json(stats);
+});
+discordRoutes.post('/sessions', async (c) => {
+    const { uploaderId, guildId } = await c.req.json();
+
+    if (!uploaderId || !guildId) {
+        return c.json({ error: 'missing_params' }, 400);
+    }
+
+    try {
+        // Verify the user exists (Foreign Key requirement)
+        const user = await UserService.getUserById(uploaderId);
+        if (!user) {
+            return c.json({ error: 'user_not_found' }, 403);
+        }
+
+        const session = await SessionService.createSession(uploaderId, guildId);
+        return c.json(session, 201);
+    } catch (error) {
+        console.error('Session Error:', error);
+        return c.json({ error: 'server_error' }, 500);
+    }
 });
 
 export default discordRoutes;

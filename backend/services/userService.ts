@@ -42,7 +42,7 @@ export const UserService = {
         FROM users u
         LEFT JOIN player_stats ps ON u.discord_id = ps.uploader_id 
         WHERE u.discord_id = $1 
-            AND ps.is_me = true  -- <--- ADD THIS CRITICAL LINE
+            AND ps.is_me = true  
         GROUP BY u.username;
         `;
         const res = await pool.query(query, [discordId]);

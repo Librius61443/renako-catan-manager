@@ -115,10 +115,16 @@ const processAndSend = async (currentLobby: string) => {
         console.log("[Catan Logger] Successfully uploaded game stats!");
         lastLoggedLobby = currentLobby;
 
+    // Inside processAndSend catch block
     } catch (err) {
-        console.error("[Catan Logger] Scrape or Upload failed:", err);
+    chrome.runtime.sendMessage({ type: 'STATUS_UPDATE', status: 'ERR' });
+    console.error("[Catan Logger] Scrape or Upload failed:", err);
     } finally {
-        setTimeout(() => { isProcessingGame = false; }, 2000);
+        chrome.runtime.sendMessage({ type: 'STATUS_UPDATE', status: 'DONE' });
+        setTimeout(() => { 
+            chrome.runtime.sendMessage({ type: 'STATUS_UPDATE', status: 'CLEAR' });
+            isProcessingGame = false; 
+        }, 5000);
     }
 };
 

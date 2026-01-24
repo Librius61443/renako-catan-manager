@@ -13,6 +13,7 @@ CREATE TABLE IF NOT EXISTS games (
     id SERIAL PRIMARY KEY,
     user_id VARCHAR(255) REFERENCES users(discord_id), 
     lobby_id VARCHAR(50) NOT NULL,
+    guild_id VARCHAR(255),
     game_timestamp TIMESTAMP NOT NULL,
     dice_stats JSONB NOT NULL,
     res_card_stats JSONB,
@@ -35,15 +36,27 @@ CREATE TABLE IF NOT EXISTS player_stats (
     UNIQUE (game_id, uploader_id, player_name)
 );
 
+CREATE TABLE IF NOT EXISTS pending_sessions (
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    uploader_id VARCHAR(255) REFERENCES users(discord_id),
+    guild_id VARCHAR(255) NOT NULL,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+-- Optional: Clean up old pending sessions after 1 hour
+DELETE FROM pending_sessions WHERE created_at < NOW() - INTERVAL '1 hour';
+-- Step 2: Drop dependent views first
 DROP VIEW IF EXISTS leaderboard_view;
 DROP VIEW IF EXISTS user_stats_view;
+DROP VIEW IF EXISTS history_view;
 
-CREATE VIEW user_stats_view AS
+-- Step 3: Recreate User Stats View with guild_id support
+CREATE OR REPLACE VIEW user_stats_view AS
 SELECT 
     u.discord_id,
     u.username,
-    COUNT(DISTINCT g.id) AS total_games, -- count games where the user is the uploader
-    COUNT(DISTINCT CASE WHEN ps.is_winner AND ps.is_me THEN g.id END) AS wins, --count wins 
+    g.guild_id, 
+    COUNT(DISTINCT g.id) AS total_games,
+    COUNT(DISTINCT CASE WHEN ps.is_winner AND ps.is_me THEN g.id END) AS wins,
     COALESCE(ROUND(AVG(ps.vp) FILTER (WHERE ps.is_me), 1), 0) AS avg_vp,
     CASE 
         WHEN COUNT(DISTINCT g.id) > 0 THEN 
@@ -53,23 +66,27 @@ SELECT
 FROM users u
 LEFT JOIN games g ON u.discord_id = g.user_id
 LEFT JOIN player_stats ps ON g.id = ps.game_id AND ps.is_me = true
-GROUP BY u.discord_id, u.username;
+GROUP BY u.discord_id, u.username, g.guild_id;
 
+-- Step 4: Recreate Leaderboard View
 CREATE VIEW leaderboard_view AS
 SELECT 
     username,
     wins,
     total_games,
     win_rate,
-    RANK() OVER (ORDER BY wins DESC, win_rate DESC) as position
+    guild_id,
+    RANK() OVER (PARTITION BY guild_id ORDER BY wins DESC, win_rate DESC) as server_position,
+    RANK() OVER (ORDER BY wins DESC, win_rate DESC) as global_position
 FROM user_stats_view
-WHERE total_games > 0
-LIMIT 10;
+WHERE total_games > 0;
 
+-- Step 5: Recreate History View
 CREATE OR REPLACE VIEW history_view AS
 SELECT 
     ps.uploader_id,
     g.id AS game_id,
+    g.guild_id,
     g.game_timestamp,
     ps.player_name,
     ps.vp,

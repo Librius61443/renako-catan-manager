@@ -15,9 +15,13 @@ dotenv.config();
     try {
         console.log('🚀 Deploying commands to Discord...');
         await rest.put(
-            Routes.applicationGuildCommands(process.env.DISCORD_CLIENT_ID!, process.env.GUILD_ID!),
+            Routes.applicationCommands(process.env.DISCORD_CLIENT_ID!),
             { body: commandData },
         );
+        // await rest.put(
+        //     Routes.applicationGuildCommands(process.env.DISCORD_CLIENT_ID!, process.env.GUILD_ID!),
+        //     { body: commandData },
+        // );
         console.log('✅ Deployment complete.');
     } catch (error) {
         console.error('❌ Deployment failed:', error);
