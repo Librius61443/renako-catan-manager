@@ -48,10 +48,10 @@ export class ApiClient {
 
     // --- POST Requests ---
 
-    async createPendingSession(uploaderId: string, guildId: string) {
+    async createPendingSession(uploaderId: string, guildId: string,channelId:string) {
         return this.request<{ id: string }>('/api/discord/sessions', {
             method: 'POST',
-            body: JSON.stringify({ uploaderId, guildId }),
+            body: JSON.stringify({ uploaderId, guildId,channelId }),
         }) as Promise<{ id: string }>; 
         // Force the type here because we know createPendingSession shouldn't return null if successful
     }

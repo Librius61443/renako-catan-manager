@@ -1,6 +1,7 @@
 import { Hono } from 'hono';
 import { UserService } from '../services/userService.js';
 import { SessionService } from '../services/sessionService.js';
+import { channel } from 'diagnostics_channel';
 const discordRoutes = new Hono();
 
 discordRoutes.get('/stats/:discordId', async (c) => {
@@ -38,7 +39,7 @@ discordRoutes.get('/search', async (c) => {
     return c.json(stats);
 });
 discordRoutes.post('/sessions', async (c) => {
-    const { uploaderId, guildId } = await c.req.json();
+    const { uploaderId, guildId,channelId } = await c.req.json();
 
     if (!uploaderId || !guildId) {
         return c.json({ error: 'missing_params' }, 400);
@@ -51,7 +52,7 @@ discordRoutes.post('/sessions', async (c) => {
             return c.json({ error: 'user_not_found' }, 403);
         }
 
-        const session = await SessionService.createSession(uploaderId, guildId);
+        const session = await SessionService.createSession(uploaderId, guildId,channelId);
         return c.json(session, 201);
     } catch (error) {
         console.error('Session Error:', error);

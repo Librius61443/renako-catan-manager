@@ -65,6 +65,8 @@ services:
   discord-bot:
     build: ./discord-bot
     restart: always
+    ports:
+      - "3001:3001"
     volumes:
       - ./discord-bot:/app
       - /app/node_modules

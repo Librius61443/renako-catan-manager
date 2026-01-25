@@ -1,8 +1,10 @@
 // bot/src/index.ts
 import { Client, GatewayIntentBits, Events } from 'discord.js';
 import * as dotenv from 'dotenv';
+import { serve } from '@hono/node-server'; // Import the Node server helper
 import { CommandHandler } from './core/CommandHandler.js';
 import { ApiClient } from './core/ApiClient.js';
+import { setupInternalRoutes } from './api/internalRoutes.js'; // Import your new routes
 
 dotenv.config();
 
@@ -16,11 +18,21 @@ const handler = new CommandHandler();
     // 1. Load commands into memory
     const commands = await handler.load();
     await handler.register(Array.from(commands.values()));
+
     client.once(Events.ClientReady, async (c) => {
         console.log(`✅ Ready! Logged in as ${c.user.tag}`);
         
-        // OPTIONAL: You can call a 'handler.register()' here if you 
-        // want the bot to automatically sync slash commands with Discord.
+        // --- START HONO INTERNAL LISTENER ---
+        // We start the server as soon as the Discord client is ready
+        const app = setupInternalRoutes(client);
+        
+        serve({
+            fetch: app.fetch,
+            port: 3001
+        }, (info) => {
+            console.log(`📡 Internal API listening on http://localhost:${info.port}`);
+        });
+        // ------------------------------------
     });
 
     client.on(Events.InteractionCreate, async (interaction) => {
@@ -33,7 +45,6 @@ const handler = new CommandHandler();
             await command.execute(interaction, { api });
         } catch (error) {
             console.error("Interaction Error:", error);
-            // Use followUp if the command deferred, or reply if it didn't
             if (interaction.deferred || interaction.replied) {
                 await interaction.followUp({ content: 'Hawaa! Something went wrong...', ephemeral: true });
             } else {

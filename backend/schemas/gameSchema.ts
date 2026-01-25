@@ -31,4 +31,14 @@ export const gameSchema = z.object({
   resource_stats: z.array(z.any())
 });
 
+export interface MatchTitles {
+    winnerName: string;
+    winnerVp: number;
+    theThief: string;     // Most resources stolen
+    theEmbargoed: string; // Most rejected trades
+    theTurtle: string;    // Most dev cards bought
+    theVillain: string;   // Most income blocked (robber)
+    luckIndex: number;    // % of 6s and 8s
+    totalRolls: number;
+}
 export type GameIngestData = z.infer<typeof gameSchema>;

@@ -10,6 +10,7 @@ export class PlayCommand implements IBotCommand {
     async execute(interaction: ChatInputCommandInteraction, { api }: BotContext): Promise<void> {
         const uploaderId = interaction.user.id;
         const guildId = interaction.guildId;
+        const channelId = interaction.channelId;
 
         if (!guildId) {
             await interaction.reply({ 
@@ -21,8 +22,7 @@ export class PlayCommand implements IBotCommand {
 
         try {
             // 1. Create a pending session in the DB via your API
-            const session = await api.createPendingSession(uploaderId, guildId);
-
+            const session = await api.createPendingSession(uploaderId, guildId, channelId);
             // 2. Defensive Check: Handle the null case (API returned 404)
             if (!session) {
                 await interaction.reply({ 
