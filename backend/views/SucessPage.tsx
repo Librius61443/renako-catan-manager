@@ -1,67 +1,94 @@
 import { html } from 'hono/html';
 
-// Add apiKey to the parameters
 export const SuccessPage = (username: string, avatarUrl: string, discordId: string, apiKey: string) => html`
   <!DOCTYPE html>
-  <html>
+  <html lang="en">
     <head>
-      <title>Account Linked</title>
+      <meta charset="UTF-8">
+      <meta name="viewport" content="width=device-width, initial-scale=1.0">
+      <title>Link Account | Renako</title>
+      <script src="https://cdn.tailwindcss.com"></script>
       <style>
-        body { font-family: -apple-system, sans-serif; background: #23272a; color: white; display: flex; align-items: center; justify-content: center; height: 100vh; margin: 0; }
-        .card { background: #2c2f33; padding: 2rem; border-radius: 15px; text-align: center; box-shadow: 0 8px 24px rgba(0,0,0,0.5); width: 320px; }
-        .avatar { width: 80px; height: 80px; border-radius: 50%; border: 3px solid #7289da; margin-bottom: 1rem; }
-        h1 { font-size: 1.5rem; margin-bottom: 0.5rem; }
-        .btn { display: inline-block; background: #7289da; color: white; padding: 12px 24px; border-radius: 5px; text-decoration: none; font-weight: bold; margin-top: 10px; transition: 0.2s; cursor: pointer; border: none; width: 100%; }
-        .btn-link { background: #43b581; }
-        .btn-link:hover { background: #3ca374; }
-        .id-badge { background: #1e2124; padding: 5px 10px; border-radius: 5px; font-family: monospace; font-size: 0.8rem; color: #99aab5; margin-bottom: 15px; }
-        .steps { text-align: left; font-size: 0.85rem; color: #b9bbbe; margin: 15px 0; }
+        @import url('https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;700&family=Inter:wght@300;400;600&display=swap');
+        
+        body {
+          font-family: 'Inter', sans-serif;
+          background-color: #0f1115; /* Deep midnight charcoal */
+        }
+        .mono { font-family: 'JetBrains Mono', monospace; }
+        
+        /* Subtle glow for Renako's theme */
+        .theme-glow {
+          box-shadow: 0 0 20px rgba(139, 92, 246, 0.1);
+        }
       </style>
     </head>
-    <body>
-      <div class="card">
-        <img src="${avatarUrl}" class="avatar" />
-        <h1>Welcome, ${username}!</h1>
-        <div class="id-badge">ID: ${discordId}</div>
-        
-        <div class="steps">
-          1. Install the Extension<br>
-          2. Click the button below to sync
+    <body class="flex items-center justify-center min-h-screen m-0 p-4">
+      <div class="card bg-[#1a1c23] border border-gray-800 p-8 rounded-2xl text-center shadow-2xl w-full max-w-sm theme-glow">
+        <div class="relative inline-block mb-6">
+          <img src="${avatarUrl}" alt="Avatar" class="w-20 h-20 rounded-full border-2 border-pink-500 p-1" />
+          <div class="absolute bottom-0 right-0 w-5 h-5 bg-green-500 border-4 border-[#1a1c23] rounded-full"></div>
         </div>
 
-        <a href="chrome://extensions" target="_blank" class="btn">Open Chrome Extensions</a>
-        <p style="font-size: 0.7rem; color: #99aab5; margin-top: 5px;">
-        Enable "Developer Mode" and click "Load Unpacked" to select your extension folder.
-        </p>        
-        <button class="btn btn-link" onclick="linkExtension('${discordId}', '${apiKey}')">
-          Link to Extension
-        </button>
+        <h1 class="text-xl font-semibold text-gray-100 mb-1">Welcome, ${username}</h1>
+        <div class="id-badge mono text-[10px] bg-[#0f1115] text-pink-400/80 py-1 px-3 rounded-md inline-block mb-6 border border-pink-900/30">
+          ID: ${discordId}
+        </div>
+
+        <div class="text-left space-y-3 mb-8">
+          <div class="flex items-start gap-3">
+            <span class="mono text-pink-500 font-bold">01.</span>
+            <p class="text-xs text-gray-400">Install the extension files to your local machine.</p>
+          </div>
+          <div class="flex items-start gap-3">
+            <span class="mono text-pink-500 font-bold">02.</span>
+            <p class="text-xs text-gray-400">Enable <span class="text-gray-200 underline decoration-pink-500/50">Developer Mode</span> in Chrome and click "Sync".</p>
+          </div>
+        </div>
+
+        <div class="space-y-3">
+          <a href="chrome://extensions" target="_blank" 
+             class="block w-full py-3 px-4 bg-gray-800 hover:bg-gray-700 text-gray-200 text-sm font-medium rounded-lg transition-all border border-gray-700">
+            Open Extensions
+          </a>
+          
+          <button onclick="linkExtension('${discordId}', '${apiKey}')" 
+                  class="block w-full py-3 px-4 bg-pink-600 hover:bg-pink-500 text-white text-sm font-bold rounded-lg transition-all shadow-lg shadow-pink-900/20">
+            Link to Extension
+          </button>
+        </div>
+
+        <p class="mt-6 text-[10px] text-gray-500 italic">
+          System: Waiting for handshake...
+        </p>
       </div>
 
-        <script>
+      <script>
         function linkExtension(discordId, apiKey) {
-            const EXTENSION_ID = "opjhadmmncbekdhlfeejiifedndfobjn";
+          const EXTENSION_ID = "opjhadmmncbekdhlfeejiifedndfobjn";
 
-            // Most browsers on localhost won't show 'chrome.runtime' 
-            // to the page unless the ID is whitelisted in manifest.json
-            try {
-            chrome.runtime.sendMessage(EXTENSION_ID, { 
-                type: "SET_CREDENTIALS", 
-                payload: { discordId, apiKey } 
-            }, (response) => {
-                if (chrome.runtime.lastError) {
-                console.log("Runtime Error:", chrome.runtime.lastError);
-                alert("Extension not detected. Make sure it is installed and Developer Mode is ON.");
-                } else if (response && response.success) {
-                alert("✅ Successfully Linked! Extension now has your credentials.");
-                }
-            });
-            } catch (e) {
-            console.error(e);
-            alert("Communication failed. Is the extension ID correct?");
+          try {
+            if (!window.chrome || !chrome.runtime) {
+              throw new Error("Chrome runtime not found");
             }
+
+            chrome.runtime.sendMessage(EXTENSION_ID, { 
+              type: "SET_CREDENTIALS", 
+              payload: { discordId, apiKey } 
+            }, (response) => {
+              if (chrome.runtime.lastError) {
+                console.error("Runtime Error:", chrome.runtime.lastError);
+                alert("Extension not detected. Ensure it's loaded and ID matches.");
+              } else if (response && response.success) {
+                alert("✅ Handshake Complete. Credentials synced.");
+              }
+            });
+          } catch (e) {
+            console.error(e);
+            alert("Connection failed. Are you in a supported browser?");
+          }
         }
-        </script>
+      </script>
     </body>
   </html>
 `;
