@@ -20,6 +20,8 @@ authRoutes.get('/callback', async (c) => {
   const state = c.req.query('state');
   const savedState = getCookie(c, 'auth_state');
 
+  console.log('🔐 OAuth callback received - code:', code?.substring(0, 10) + '...', 'state:', state, 'saved:', savedState);
+
   // Security Check
   if (!state || state !== savedState) {
     return c.text("Security Mismatch: State does not match.", 400);
@@ -27,6 +29,7 @@ authRoutes.get('/callback', async (c) => {
 
   try {
     // 1. Exchange Code for Token
+    console.log('📡 Exchanging code for token...');
     const tokenResponse = await fetch('https://discord.com/api/oauth2/token', {
       method: 'POST',
       body: new URLSearchParams({
@@ -39,28 +42,41 @@ authRoutes.get('/callback', async (c) => {
       headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
     });
 
-    if (!tokenResponse.ok) throw new Error('Failed to get token');
+    if (!tokenResponse.ok) {
+      const errorText = await tokenResponse.text();
+      console.error('❌ Token exchange failed:', tokenResponse.status, errorText);
+      throw new Error('Failed to get token: ' + errorText);
+    }
     const tokenData = await tokenResponse.json();
+    console.log('✅ Got access token');
 
     // 2. Get Discord Profile
+    console.log('👤 Fetching Discord profile...');
     const userRes = await fetch('https://discord.com/api/users/@me', {
       headers: { Authorization: `Bearer ${tokenData.access_token}` },
     });
     
-    if (!userRes.ok) throw new Error('Failed to fetch user profile');
+    if (!userRes.ok) {
+      const errorText = await userRes.text();
+      console.error('❌ User profile fetch failed:', userRes.status, errorText);
+      throw new Error('Failed to fetch user profile: ' + errorText);
+    }
     const discordUser = await userRes.json();
+    console.log('✅ Got Discord user:', discordUser.username);
 
     // 3. Upsert to DB
+    console.log('💾 Upserting user to database...');
     const user = await UserService.upsertUser(
       discordUser.id, 
       discordUser.username, 
       discordUser.avatar
     );
+    console.log('✅ User saved to DB:', user.discord_id);
 
     return c.html(SuccessPage(user.username,user.avatar_url,user.discord_id,user.api_key));
   } catch (error) {
-    console.error("Auth Error:", error);
-    return c.json({ error: "Authentication failed" }, 500);
+    console.error("❌ Auth Error:", error);
+    return c.json({ error: "Authentication failed", details: error instanceof Error ? error.message : String(error) }, 500);
   }
 });
 
