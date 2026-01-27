@@ -15,44 +15,129 @@ export class StatsCommand implements IBotCommand {
             const stats = await api.getStats(interaction.user.id);
 
             // Handle "User exists in DB but has 0 games"
-            // Note: Postgres COUNT returns '0' as a string or 0 as number depending on your pg driver config
             if (!stats || Number(stats.total_games) === 0) {
                 const emptyEmbed = new EmbedBuilder()
-                    .setTitle('Hawaa?! No games found! 💦')
+                    .setTitle('🌸 E-eh?! Your stats are... empty?!')
                     .setDescription(
-                        "I checked the database and... there's nothing there! " +
-                        "Did you forget to turn on the extension? Or maybe you're just a peaceful person " +
-                        "who doesn't like conflict? (I wish I could be like that...)"
+                        "```\n" +
+                        "┌─────────────────────────────────┐\n" +
+                        "│  No games found... (╥﹏╥)       │\n" +
+                        "│                                 │\n" +
+                        "│  D-did I mess up the database?! │\n" +
+                        "│  No no, it's probably fine...   │\n" +
+                        "│  ...probably.                   │\n" +
+                        "└─────────────────────────────────┘\n" +
+                        "```\n\n" +
+                        "*R-Renako frantically checks her notes...*\n\n" +
+                        "Oh! You haven't played any tracked games yet! " +
+                        "That's totally okay! I mean, I get nervous playing too... " +
+                        "especially when people are watching... (⁄ ⁄>⁄ ▽ ⁄<⁄ ⁄)"
                     )
                     .addFields({ 
-                        name: 'How to fix this:', 
-                        value: '1. Make sure you /link your account.\n2. Play a game with the extension active!\n3. Try not to bully me if it still doesn\'t work!' 
+                        name: '💕 How to get started (I-I think!)', 
+                        value: 
+                            '```md\n' +
+                            '1. Use /link to connect your account\n' +
+                            '2. Install the browser extension\n' +
+                            '3. Play a game on Colonist.io\n' +
+                            '4. Come back and I\'ll show you stats!\n' +
+                            '   (Please don\'t be mad if it breaks...)\n' +
+                            '```',
+                        inline: false
                     })
-                    .setColor('#FFB6C1');
+                    .setColor('#FFB6C1')
+                    .setFooter({ 
+                        text: '💭 Renako\'s Social Battery: [■■□□□] (Barely hanging on...)',
+                        iconURL: interaction.user.displayAvatarURL()
+                    })
+                    .setTimestamp();
 
                 await interaction.editReply({ embeds: [emptyEmbed] });
                 return;
             }
 
+            // Calculate some Renako-style commentary
+            const winRate = parseFloat(stats.win_rate);
+            let renakoComment = '';
+            let renakoMood = '';
+            
+            if (winRate >= 50) {
+                renakoComment = "W-wow! You're really good! Unlike me who panics every turn... (´,,•ω•,,)";
+                renakoMood = '✨ Impressed (but also intimidated)';
+            } else if (winRate >= 30) {
+                renakoComment = "Those are solid stats! Better than mine probably... I-I mean, not that I play much!";
+                renakoMood = '🌸 Encouraging (in her own way)';
+            } else {
+                renakoComment = "H-hey, don't worry! We all have rough games... I lose at life daily! (╥﹏╥)";
+                renakoMood = '💕 Sympathetically panicking';
+            }
+
             const embed = new EmbedBuilder()
-                .setAuthor({ name: 'CatanStats Personal Report'})
-                .setTitle(`📊 ${interaction.user.username}'s Results... I think?`)
+                .setAuthor({ 
+                    name: '📊 CatanStats Report Card',
+                    iconURL: interaction.user.displayAvatarURL()
+                })
+                .setTitle(`✨ ${interaction.user.username}'s Stats ✨`)
                 .setColor('#FFB6C1')
                 .setThumbnail(interaction.user.displayAvatarURL())
                 .addFields(
-                    { name: 'Total Games', value: `\`${stats.total_games}\``, inline: true },
-                    { name: 'Wins', value: `\`${stats.wins}\``, inline: true },
-                    { name: 'Win Rate', value: `\`${stats.win_rate}%\``, inline: true },
-                    { name: 'Avg VP', value: `\`${stats.avg_vp}\``, inline: false }
+                    { 
+                        name: '🎮 Total Games', 
+                        value: `\`\`\`yaml\n${stats.total_games} games\n\`\`\``, 
+                        inline: true 
+                    },
+                    { 
+                        name: '🏆 Wins', 
+                        value: `\`\`\`yaml\n${stats.wins} victories\n\`\`\``, 
+                        inline: true 
+                    },
+                    { 
+                        name: '📈 Win Rate', 
+                        value: `\`\`\`yaml\n${stats.win_rate}%\n\`\`\``, 
+                        inline: true 
+                    },
+                    { 
+                        name: '⭐ Average Victory Points', 
+                        value: `\`\`\`fix\n${stats.avg_vp} VP per game\n\`\`\``, 
+                        inline: false 
+                    }
                 )
-                .setFooter({ text: 'Status: Socially Exhausted' })
+                .setFooter({ 
+                    text: '🌸 Generated by Amori Renako | Social Battery: [■□□□□] (Send help)',
+                    iconURL: interaction.user.displayAvatarURL()
+                })
                 .setTimestamp();
 
             await interaction.editReply({ embeds: [embed] });
 
         } catch (error) {
-            // Handle "User not found at all" (404 from your API)
-            await interaction.editReply("Ugh, I can't even find your account! Are you sure you've used `/link`? My social battery is too low for ghost accounts! 😭");
+            // Renako panic mode!
+            const panicEmbed = new EmbedBuilder()
+                .setTitle('💦 A-AHHH! Something went wrong!')
+                .setDescription(
+                    "```\n" +
+                    "ERROR: Renako is having a breakdown!\n" +
+                    "Status: [PANICKING]\n" +
+                    "```\n\n" +
+                    "*Renako is frantically flipping through her notes...*\n\n" +
+                    "I-I can't find your account in the database! (╥﹏╥)\n\n" +
+                    "Did you forget to use `/link`? Or maybe the database is broken? " +
+                    "Or maybe *I'm* broken?! No no, stay calm Renako... " +
+                    "deep breaths... one, two...\n\n" +
+                    "```fix\n" +
+                    "Please try:\n" +
+                    "→ Using /link to connect your account\n" +
+                    "→ Waiting a moment and trying again\n" +
+                    "→ Not judging me too harshly... (⁄ ⁄>⁄ ▽ ⁄<⁄ ⁄)\n" +
+                    "```"
+                )
+                .setColor('#FF69B4')
+                .setFooter({ 
+                    text: '💔 Renako\'s Social Battery: [DEPLETED] (I need a nap...)',
+                })
+                .setTimestamp();
+
+            await interaction.editReply({ embeds: [panicEmbed] });
         }
     }
 }
