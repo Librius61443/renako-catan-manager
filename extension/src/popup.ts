@@ -6,7 +6,7 @@ interface RenakoStorage {
   discordId?: string;
 }
 
-const trackBtn = document.getElementById('track-btn') as HTMLButtonElement;
+// const trackBtn = document.getElementById('track-btn') as HTMLButtonElement;
 const disconnectBtn = document.getElementById('disconnect-btn') as HTMLButtonElement;
 const statusText = document.getElementById('game-state')!;
 const dot = document.getElementById('status-dot')!;
@@ -27,7 +27,7 @@ function updateUI(apiKey?: string, discordId?: string) {
     accountSection.classList.remove('hidden');
     disconnectBtn.classList.remove('hidden');
     displayId.innerText = discordId || "Unknown User";
-    trackBtn.disabled = false;
+    // trackBtn.disabled = false;
   } else {
     // Disconnected State
     dot.className = "w-2.5 h-2.5 bg-red-500 rounded-full shadow-[0_0_8px_rgba(239,68,68,0.6)] border border-[#1a0f14]";
@@ -38,7 +38,7 @@ function updateUI(apiKey?: string, discordId?: string) {
     
     accountSection.classList.add('hidden');
     disconnectBtn.classList.add('hidden');
-    trackBtn.disabled = true;
+    // trackBtn.disabled = true;
   }
 }
 
@@ -67,18 +67,18 @@ disconnectBtn.addEventListener('click', () => {
   }
 });
 
-// --- 5. TRACKING TRIGGER ---
-trackBtn.addEventListener('click', async () => {
-  statusText.innerText = "Scanning Game Board...";
+// // --- 5. TRACKING TRIGGER ---
+// trackBtn.addEventListener('click', async () => {
+//   statusText.innerText = "Scanning Game Board...";
   
-  const [tab] = await chrome.tabs.query({ active: true, currentWindow: true });
-  if (tab?.id) {
-    chrome.tabs.sendMessage(tab.id, { type: "GET_STATS" }, (response) => {
-      if (chrome.runtime.lastError || !response) {
-        statusText.innerText = "Error: Catan Not Found";
-      } else {
-        statusText.innerText = "Stats Sent to Backend!";
-      }
-    });
-  }
-});
+//   const [tab] = await chrome.tabs.query({ active: true, currentWindow: true });
+//   if (tab?.id) {
+//     chrome.tabs.sendMessage(tab.id, { type: "GET_STATS" }, (response) => {
+//       if (chrome.runtime.lastError || !response) {
+//         statusText.innerText = "Error: Catan Not Found";
+//       } else {
+//         statusText.innerText = "Stats Sent to Backend!";
+//       }
+//     });
+//   }
+// });
