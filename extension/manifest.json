@@ -3,6 +3,9 @@
   "name": "Colonist Game Logger",
   "version": "1.0",
   "permissions": ["storage"],
+  "action":{
+    "default_popup":"popup.html"
+  },
   "host_permissions": [
     "http://localhost:3000/*"
   ],

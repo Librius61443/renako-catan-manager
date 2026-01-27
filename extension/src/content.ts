@@ -146,3 +146,16 @@ const observer = new MutationObserver(() => {
 });
 
 observer.observe(document.body, { childList: true, subtree: true });
+chrome.runtime.onMessage.addListener((request, _sender, sendResponse) => {
+  if (request.type === "GET_STATS") {
+    const lobbyId = window.location.href.split('/').pop() || "manual-trigger";
+    
+    if (isProcessingGame) {
+      sendResponse({ success: false, message: "Already processing..." });
+    } else {
+      processAndSend(lobbyId); // Trigger the full crawl and upload
+      sendResponse({ success: true });
+    }
+  }
+  return true; 
+});

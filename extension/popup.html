@@ -1,0 +1,93 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <title>Renako Popup</title>
+    <link rel="stylesheet" href="./src/style.css" />
+  </head>
+  <body class="w-[320px] bg-[#1a0f14] text-pink-50 antialiased font-sans">
+    <div
+      class="bg-[#25161c] border-b border-pink-900/30 p-4 flex items-center justify-between"
+    >
+      <div class="flex items-center gap-2">
+        <div
+          class="w-6 h-6 bg-[#ff79c6] rounded-md shadow-[0_0_10px_rgba(255,121,198,0.4)] flex items-center justify-center"
+        >
+          <span class="text-[10px] font-black text-[#1a0f14]">R</span>
+        </div>
+        <span class="font-bold text-sm tracking-tight text-[#ff92d0]"
+          >RENAKO</span
+        >
+      </div>
+      <div
+        id="status-dot"
+        class="w-2.5 h-2.5 bg-red-500 rounded-full shadow-[0_0_8px_rgba(239,68,68,0.6)] border border-[#1a0f14]"
+      ></div>
+    </div>
+
+    <div class="p-5 space-y-4">
+      <div id="account-section" class="hidden animate-in fade-in duration-500">
+        <div
+          class="bg-[#120a0d] border border-pink-900/20 rounded-xl p-3 flex items-center gap-3"
+        >
+          <div class="bg-pink-900/20 p-2 rounded-full">
+            <svg
+              xmlns="http://www.w3.org/2000/svg"
+              class="w-4 h-4 text-pink-400"
+              fill="none"
+              viewBox="0 0 24 24"
+              stroke="currentColor"
+            >
+              <path
+                stroke-linecap="round"
+                stroke-linejoin="round"
+                stroke-width="2"
+                d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"
+              />
+            </svg>
+          </div>
+          <div class="overflow-hidden">
+            <p
+              class="text-[9px] text-pink-700 uppercase font-bold tracking-widest"
+            >
+              Linked Discord
+            </p>
+            <p
+              id="display-id"
+              class="text-xs font-mono text-pink-300 truncate tracking-tighter"
+            >
+              --
+            </p>
+          </div>
+        </div>
+      </div>
+
+      <div class="bg-[#120a0d] border border-pink-900/10 rounded-xl p-3">
+        <p
+          id="game-state"
+          class="text-[11px] text-pink-200/50 font-mono italic"
+        >
+          Waiting for connection...
+        </p>
+      </div>
+
+      <div class="space-y-2">
+        <button
+          id="track-btn"
+          class="group relative w-full overflow-hidden bg-[#ff79c6] hover:bg-[#ff85cd] text-[#1a0f14] py-3 rounded-xl text-xs font-black uppercase tracking-tighter transition-all active:scale-[0.97] disabled:opacity-50 disabled:cursor-not-allowed"
+        >
+          Track Current Game
+        </button>
+
+        <button
+          id="disconnect-btn"
+          class="hidden w-full py-2 text-[10px] text-pink-900 hover:text-pink-500 font-bold uppercase tracking-widest transition-colors"
+        >
+          Disconnect Account
+        </button>
+      </div>
+    </div>
+
+    <script type="module" src="/src/popup.ts"></script>
+  </body>
+</html>

@@ -1,12 +1,14 @@
 import { defineConfig } from 'vite';
 import { viteStaticCopy } from 'vite-plugin-static-copy';
-
+import tailwindcss from '@tailwindcss/vite';
 export default defineConfig({
   build: {
     outDir: 'dist',
     emptyOutDir: true,
+    cssCodeSplit:false,
     rollupOptions: {
       input: {
+        popup:'popup.html',
         content: 'src/content.ts',
         background: 'src/background.ts', // <--- ADD THIS LINE
       },
@@ -21,5 +23,6 @@ export default defineConfig({
     viteStaticCopy({
       targets: [{ src: 'manifest.json', dest: '.' }]
     }),
+    tailwindcss()
   ],
 });
