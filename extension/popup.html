@@ -5,17 +5,20 @@
     <title>Renako Popup</title>
     <link rel="stylesheet" href="./src/style.css" />
   </head>
-  <body class="w-[320px] bg-[#1a0f14] text-pink-50 antialiased font-sans">
+  <body
+    class="w-[320px] bg-gradient-to-b from-[#1a0f14] to-[#0f0a0c] text-pink-50 antialiased font-sans"
+  >
     <div
-      class="bg-[#25161c] border-b border-pink-900/30 p-4 flex items-center justify-between"
+      class="bg-gradient-to-r from-[#ff79c6]/10 to-[#ff1493]/10 border-b border-pink-600/40 p-4 flex items-center justify-between"
     >
       <div class="flex items-center gap-2">
         <div
-          class="w-6 h-6 bg-[#ff79c6] rounded-md shadow-[0_0_10px_rgba(255,121,198,0.4)] flex items-center justify-center"
+          class="w-6 h-6 bg-gradient-to-br from-[#ff79c6] to-[#ff1493] rounded-md shadow-[0_0_15px_rgba(255,121,198,0.6)] flex items-center justify-center"
         >
-          <span class="text-[10px] font-black text-[#1a0f14]">R</span>
+          <span class="text-[10px] font-black text-white">R</span>
         </div>
-        <span class="font-bold text-sm tracking-tight text-[#ff92d0]"
+        <span
+          class="font-bold text-sm tracking-tight bg-gradient-to-r from-[#ff79c6] to-[#ff1493] bg-clip-text text-transparent"
           >RENAKO</span
         >
       </div>
@@ -26,14 +29,53 @@
     </div>
 
     <div class="p-5 space-y-4">
+      <div
+        id="connecting-status"
+        class="hidden animate-in fade-in duration-500"
+      >
+        <div
+          class="bg-gradient-to-r from-[#ff79c6]/30 to-[#ff1493]/20 border border-[#ff79c6]/60 rounded-xl p-3 flex items-center gap-3 animate-pulse"
+        >
+          <div class="flex items-center gap-2">
+            <div
+              class="w-2 h-2 bg-[#ff79c6] rounded-full animate-spin"
+              style="animation: spin 1s linear infinite"
+            ></div>
+            <span
+              class="text-[10px] text-[#ff79c6] font-bold uppercase tracking-widest"
+              >Connecting...</span
+            >
+          </div>
+        </div>
+      </div>
+
+      <div
+        id="connection-status"
+        class="hidden animate-in fade-in duration-500"
+      >
+        <div
+          class="bg-gradient-to-r from-[#ff79c6]/25 to-[#ff1493]/15 border border-[#ff79c6]/60 rounded-xl p-3 flex items-center gap-3 shadow-[0_0_15px_rgba(255,121,198,0.3)]"
+        >
+          <div class="flex items-center gap-2">
+            <div class="w-2 h-2 bg-[#ff79c6] rounded-full animate-pulse"></div>
+            <span
+              class="text-[10px] text-[#ff79c6] font-bold uppercase tracking-widest"
+              >Connected</span
+            >
+          </div>
+        </div>
+      </div>
+
       <div id="account-section" class="hidden animate-in fade-in duration-500">
         <div
-          class="bg-[#120a0d] border border-pink-900/20 rounded-xl p-3 flex items-center gap-3"
+          class="bg-gradient-to-br from-[#2a1525] to-[#1a0f14] border border-[#ff79c6]/40 rounded-xl p-3 flex items-center gap-3 shadow-[0_0_10px_rgba(255,121,198,0.2)]"
         >
-          <div class="bg-pink-900/20 p-2 rounded-full">
+          <div
+            class="bg-gradient-to-br from-[#ff79c6]/40 to-[#ff1493]/30 p-2 rounded-full"
+          >
             <svg
               xmlns="http://www.w3.org/2000/svg"
-              class="w-4 h-4 text-pink-400"
+              class="w-4 h-4 text-[#ff79c6]"
               fill="none"
               viewBox="0 0 24 24"
               stroke="currentColor"
@@ -48,13 +90,13 @@
           </div>
           <div class="overflow-hidden">
             <p
-              class="text-[9px] text-pink-700 uppercase font-bold tracking-widest"
+              class="text-[9px] text-[#ff79c6] uppercase font-bold tracking-widest"
             >
               Linked Discord
             </p>
             <p
               id="display-id"
-              class="text-xs font-mono text-pink-300 truncate tracking-tighter"
+              class="text-xs font-mono text-pink-200 truncate tracking-tighter"
             >
               --
             </p>
@@ -62,10 +104,12 @@
         </div>
       </div>
 
-      <div class="bg-[#120a0d] border border-pink-900/10 rounded-xl p-3">
+      <div
+        class="bg-gradient-to-br from-[#1f1419] to-[#120a0d] border border-[#ff79c6]/20 rounded-xl p-3 shadow-[inset_0_0_10px_rgba(255,121,198,0.1)]"
+      >
         <p
           id="game-state"
-          class="text-[11px] text-pink-200/50 font-mono italic"
+          class="text-[11px] text-pink-300/70 font-mono italic"
         >
           Waiting for connection...
         </p>
@@ -81,7 +125,7 @@
 
         <button
           id="disconnect-btn"
-          class="hidden w-full py-2 text-[10px] text-pink-900 hover:text-pink-500 font-bold uppercase tracking-widest transition-colors"
+          class="hidden w-full py-2 text-[10px] text-[#ff79c6] hover:text-[#ff1493] hover:bg-[#ff79c6]/10 font-bold uppercase tracking-widest transition-colors rounded-lg border border-[#ff79c6]/30 hover:border-[#ff79c6]/60"
         >
           Disconnect Account
         </button>
