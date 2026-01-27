@@ -58,36 +58,116 @@ export const SuccessPage = (username: string, avatarUrl: string, discordId: stri
           </button>
         </div>
 
-        <p class="mt-6 text-[10px] text-gray-500 italic">
+      <div id="status-message" class="mt-6 text-center">
+        <p class="text-[10px] text-gray-500 italic">
           System: Waiting for handshake...
         </p>
       </div>
+    </div>
 
-      <script>
-        function linkExtension(discordId, apiKey) {
-          const EXTENSION_ID = "opjhadmmncbekdhlfeejiifedndfobjn";
+    <div id="loading-overlay" class="hidden fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50">
+      <div class="bg-[#1a1c23] border border-pink-600/40 rounded-xl p-8 text-center max-w-sm">
+        <div class="mb-6 flex justify-center">
+          <div class="relative w-16 h-16">
+            <div class="absolute inset-0 rounded-full border-4 border-transparent border-t-pink-500 border-r-pink-500 animate-spin"></div>
+            <div class="absolute inset-2 rounded-full border-2 border-pink-900/30"></div>
+          </div>
+        </div>
+        
+        <h2 class="text-lg font-semibold text-gray-100 mb-2">Connecting...</h2>
+        <p class="text-sm text-gray-400 mb-4">
+          Linking your Discord account to the extension
+        </p>
+        
+        <div class="bg-gray-900 rounded-lg p-4 mb-4 border border-gray-800">
+          <p class="text-xs text-gray-300 font-mono">
+            Check the extension popup for connection confirmation
+          </p>
+        </div>
+        
+        <p class="text-[10px] text-gray-500">
+          You can close this window once the extension popup shows "Connected"
+        </p>
+      </div>
+    </div>
+
+    <style>
+      @keyframes spin {
+        to { transform: rotate(360deg); }
+      }
+    </style>
+
+    <script>
+      function showLoadingOverlay() {
+        document.getElementById('loading-overlay').classList.remove('hidden');
+        document.getElementById('status-message').innerHTML = '<p class="text-[10px] text-pink-400 italic font-semibold">✨ Connecting to extension...</p>';
+      }
+
+      function hideLoadingOverlay() {
+        document.getElementById('loading-overlay').classList.add('hidden');
+        document.getElementById('status-message').innerHTML = '<p class="text-[10px] text-green-400 italic font-semibold">✅ Connected! Check your extension popup.</p>';
+      }
+
+      function showError(message) {
+        document.getElementById('loading-overlay').classList.add('hidden');
+        document.getElementById('status-message').innerHTML = '<p class="text-[10px] text-red-400 italic font-semibold">❌ ' + message + '</p>';
+      }
+
+      function linkExtension(discordId, apiKey) {
+        const EXTENSION_ID = "opjhadmmncbekdhlfeejiifedndfobjn";
+        let attemptCount = 0;
+        const maxAttempts = 3;
+
+        showLoadingOverlay();
+
+        function attempt() {
+          attemptCount++;
+          console.log('Attempt ' + attemptCount + ' to connect to extension...');
 
           try {
             if (!window.chrome || !chrome.runtime) {
               throw new Error("Chrome runtime not found");
             }
 
-            chrome.runtime.sendMessage(EXTENSION_ID, { 
-              type: "SET_CREDENTIALS", 
-              payload: { discordId, apiKey } 
-            }, (response) => {
-              if (chrome.runtime.lastError) {
-                console.error("Runtime Error:", chrome.runtime.lastError);
-                alert("Extension not detected. Ensure it's loaded and ID matches.");
-              } else if (response && response.success) {
-                alert("✅ Handshake Complete. Credentials synced.");
+            chrome.runtime.sendMessage(
+              EXTENSION_ID,
+              {
+                type: "SET_CREDENTIALS",
+                payload: { discordId, apiKey }
+              },
+              (response) => {
+                if (chrome.runtime.lastError) {
+                  console.error("Runtime Error: " + chrome.runtime.lastError.message);
+                  
+                  if (attemptCount < maxAttempts) {
+                    console.log('Retrying in 500ms...');
+                    setTimeout(attempt, 500);
+                  } else {
+                    showError("Extension not detected. Make sure it's installed and enabled.");
+                  }
+                } else if (response && response.success) {
+                  console.log("Handshake successful: ", response);
+                  hideLoadingOverlay();
+                } else {
+                  console.warn("Unexpected response: ", response);
+                  if (attemptCount < maxAttempts) {
+                    setTimeout(attempt, 500);
+                  }
+                }
               }
-            });
+            );
           } catch (e) {
-            console.error(e);
-            alert("Connection failed. Are you in a supported browser?");
+            console.error("Error: ", e);
+            if (attemptCount < maxAttempts) {
+              setTimeout(attempt, 500);
+            } else {
+              showError("Connection failed. Are you in Chrome and is the extension installed?");
+            }
           }
         }
+
+        attempt();
+      }
       </script>
     </body>
   </html>
