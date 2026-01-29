@@ -58,6 +58,9 @@ chrome.runtime.onMessageExternal.addListener(
         // Set connected icon
         setConnectedIcon();
         
+        // Open popup to show successful connection
+        chrome.action.openPopup();
+        
         // Send confirmation response back to page
         sendResponse({ 
           success: true, 
@@ -76,5 +79,44 @@ chrome.runtime.onMessageExternal.addListener(
 chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
   if (message.type === 'DISCONNECTED') {
     setDisconnectedIcon();
+  }
+  
+  // Handle error notifications from content script
+  if (message.type === 'ERROR_NOTIFICATION') {
+    const { error, status } = message;
+    console.error('❌ Game submission error:', error);
+    
+    // Set error badge on extension icon
+    chrome.action.setBadgeText({ text: '⚠️' });
+    chrome.action.setBadgeBackgroundColor({ color: '#ff0000' });
+    
+    // Store error for popup to display
+    chrome.storage.local.set({ 
+      lastError: error,
+      lastErrorTime: Date.now(),
+      lastErrorStatus: status
+    });
+    
+    // Open popup to show error
+    chrome.action.openPopup();
+    
+    // Clear badge after 10 seconds
+    setTimeout(() => {
+      chrome.action.setBadgeText({ text: '' });
+    }, 10000);
+  }
+  
+  // Handle success notifications
+  if (message.type === 'SUCCESS_NOTIFICATION') {
+    console.log('✅ Game submitted successfully');
+    
+    // Set success badge
+    chrome.action.setBadgeText({ text: '✓' });
+    chrome.action.setBadgeBackgroundColor({ color: '#00ff00' });
+    
+    // Clear badge after 5 seconds
+    setTimeout(() => {
+      chrome.action.setBadgeText({ text: '' });
+    }, 5000);
   }
 });
