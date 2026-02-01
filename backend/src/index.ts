@@ -20,7 +20,7 @@ app.route('/api/auth', authRoutes);       // Handles Login/Callback
 app.route('/api/discord', discordRoutes); // Handles Bot Interactions
 app.route('/api/games', gameRoutes);       // Handles Scraper Data
 
-app.get('/', (c) => c.text('Catan Service is Online!'));
+app.get('/', (c) => c.text('Catan Service is Online YAY!'));
 
 serve({
   fetch: app.fetch,

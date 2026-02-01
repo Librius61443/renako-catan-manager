@@ -97,7 +97,7 @@ export const SuccessPage = (username: string, avatarUrl: string, discordId: stri
       </div>
 
       <script>
-        const EXTENSION_ID = "opjhadmmncbekdhlfeejiifedndfobjn";
+        const EXTENSION_ID = "bghbdchoonfjinjmoglhiiehgaefelco";
 
         function updateUI(state) {
           const overlay = document.getElementById('loading-overlay');

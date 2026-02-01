@@ -21,7 +21,7 @@ export class StatsCommand implements IBotCommand {
                     .setDescription(
                         "```\n" +
                         "┌─────────────────────────────────┐\n" +
-                        "│  No games found... (╥﹏╥)       │\n" +
+                        "│  No games found... (╥﹏╥)        │\n" +
                         "│                                 │\n" +
                         "│  D-did I mess up the database?! │\n" +
                         "│  No no, it's probably fine...   │\n" +
