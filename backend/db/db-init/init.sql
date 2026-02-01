@@ -6,6 +6,13 @@ CREATE TABLE IF NOT EXISTS users (
     username VARCHAR(255),                   
     avatar_url TEXT,                         
     api_key UUID DEFAULT gen_random_uuid() UNIQUE,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    catan_username TEXT
+);
+CREATE TABLE catan_identities (
+    id SERIAL PRIMARY KEY,
+    discord_id TEXT NOT NULL REFERENCES users(discord_id) ON DELETE CASCADE,
+    catan_name TEXT UNIQUE NOT NULL, -- UNIQUE ensures no two people claim the same name
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
 
